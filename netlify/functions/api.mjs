@@ -1,6 +1,6 @@
 import { getStore } from '@netlify/blobs';
 const CH = 4 * 1024 * 1024;
-const J = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { 'content-type': 'application/json' } });
+const J = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } });
 const hash = async s => [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)))].map(b => b.toString(16).padStart(2, '0')).join('');
 const rid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 const clean = s => String(s || '').replace(/[^\w-]/g, '');
@@ -11,7 +11,7 @@ async function rm(store, id) {
   await store.delete('f/' + id + '/meta');
 }
 export default async (req) => {
-  const store = getStore('you'), u = new URL(req.url);
+  const store = getStore({ name: 'you', consistency: 'strong' }), u = new URL(req.url);
   const p = u.pathname.replace(/^\/api\/?/, '').split('/');
   const cid = req.headers.get('x-cid') || '', me = cid ? await hash(cid) : '';
   try {
